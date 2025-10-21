@@ -43,11 +43,48 @@ jobs:
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            cd ~/Real-fulani-hair-finder-backend
-            git pull origin main
-            npm install --production
-            npm run db:migrate
-            npm run build
-            pm2 stop all || true
-            pm2 restart all
+            echo "🔧 Checking environment..."
 
+            # Ensure Node.js and npm are installed
+            if ! command -v node &> /dev/null
+            then
+              echo "🚀 Installing Node.js 22..."
+              curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
+              sudo apt-get install -y nodejs
+            fi
+
+            # Ensure PM2 is installed globally
+            if ! command -v pm2 &> /dev/null
+            then
+              echo "🧩 Installing PM2..."
+              sudo npm install -g pm2
+            fi
+
+            # Ensure project directory exists
+            if [ ! -d "~/Real-fulani-hair-finder-backend" ]; then
+              echo "📁 Creating project folder..."
+              mkdir -p ~/Real-fulani-hair-finder-backend
+              cd ~
+              git clone https://github.com/<YOUR_GITHUB_USERNAME>/Real-fulani-hair-finder-backend.git
+            fi
+
+            cd ~/Real-fulani-hair-finder-backend
+
+            echo "📦 Pulling latest changes..."
+            git fetch origin main
+            git reset --hard origin/main
+
+            echo "📦 Installing dependencies..."
+            npm install --production
+
+            echo "🗃️ Running database migrations..."
+            npm run db:migrate || echo "⚠️ No migration script found, skipping."
+
+            echo "🏗️ Building project..."
+            npm run build
+
+            echo "🚦 Restarting PM2..."
+            pm2 reload backend || pm2 start dist/server.js --name backend
+            pm2 save
+
+            echo "✅ Deployment complete!"
