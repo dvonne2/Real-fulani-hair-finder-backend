@@ -1,8 +1,8 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import healthRouter from './routes/health.js';
-import quizResultsRouter from './routes/quizResults.js';
+import healthRouter from './routes/health';
+import quizResultsRouter from './routes/quizResults';
 
 dotenv.config();
 

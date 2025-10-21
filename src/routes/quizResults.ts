@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express';
-import { QuizResult } from '../models/index.js';
+import { QuizResult } from '../models/index';
 
 const router = Router();
 
