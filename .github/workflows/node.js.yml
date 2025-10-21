@@ -96,10 +96,8 @@ jobs:
             echo "📦 Installing dependencies..."
             npm install --production
 
-            echo "🧹 Cleaning old dist..."
-            rm -rf dist
-            echo "📂 Updating dist from GitHub artifact..."
-            # dist is already copied above via scp
+            echo "📂 Using dist from GitHub artifact..."
+            # The dist folder is already updated via SCP above — no deletion needed
 
             echo "🗃️ Running database migrations..."
             npm run db:migrate || echo "⚠️ No migration script found, skipping."
