@@ -13,30 +13,51 @@ jobs:
         node-version: [22.x]
 
     steps:
-      - name: Checkout repository
+      - name: 🧩 Checkout repository
         uses: actions/checkout@v4
 
-      - name: Use Node.js ${{ matrix.node-version }}
+      - name: ⚙️ Setup Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
           cache: 'npm'
 
-      - name: Install dependencies
+      - name: 📦 Install dependencies
         run: npm ci
 
-      - name: Build TypeScript
+      - name: 🏗️ Build TypeScript project
         run: npm run build
+
+      - name: 📤 Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build
+          path: dist
 
   deploy:
     runs-on: ubuntu-latest
     needs: build
 
     steps:
-      - name: Checkout repository
+      - name: 🧩 Checkout repository
         uses: actions/checkout@v4
 
-      - name: Deploy to EC2 via SSH
+      - name: 📥 Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build
+          path: dist
+
+      - name: 📦 Copy build files to EC2
+        uses: appleboy/scp-action@v0.1.4
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          source: "dist/*"
+          target: "~/Real-fulani-hair-finder-backend/dist"
+
+      - name: 🚀 Deploy on EC2 via SSH
         uses: appleboy/ssh-action@v0.1.10
         with:
           host: ${{ secrets.EC2_HOST }}
@@ -45,17 +66,15 @@ jobs:
           script: |
             echo "🔧 Checking environment..."
 
-            # Ensure Node.js and npm are installed
-            if ! command -v node &> /dev/null
-            then
+            # Ensure Node.js 22 is installed
+            if ! command -v node &> /dev/null; then
               echo "🚀 Installing Node.js 22..."
               curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
               sudo apt-get install -y nodejs
             fi
 
             # Ensure PM2 is installed globally
-            if ! command -v pm2 &> /dev/null
-            then
+            if ! command -v pm2 &> /dev/null; then
               echo "🧩 Installing PM2..."
               sudo npm install -g pm2
             fi
@@ -77,11 +96,13 @@ jobs:
             echo "📦 Installing dependencies..."
             npm install --production
 
+            echo "🧹 Cleaning old dist..."
+            rm -rf dist
+            echo "📂 Updating dist from GitHub artifact..."
+            # dist is already copied above via scp
+
             echo "🗃️ Running database migrations..."
             npm run db:migrate || echo "⚠️ No migration script found, skipping."
-
-            echo "🏗️ Building project..."
-            npm run build
 
             echo "🚦 Restarting PM2..."
             pm2 reload backend || pm2 start dist/server.js --name backend
