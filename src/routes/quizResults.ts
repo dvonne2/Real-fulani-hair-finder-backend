@@ -19,6 +19,29 @@ router.get('/', async (req: Request, res: Response) => {
   }
 });
 
+// Update lead/contact fields or recommendation
+router.patch('/:id', async (req: Request, res: Response) => {
+  try {
+    const id = Number(req.params.id);
+    if (!id || Number.isNaN(id)) return res.status(400).json({ error: 'invalid id' });
+    const result: any = await QuizResult.findByPk(id);
+    if (!result) return res.status(404).json({ error: 'Not found' });
+
+    const { name, email, phone, state, recommendation } = req.body || {};
+    if (name !== undefined) result.name = name;
+    if (email !== undefined) result.email = email;
+    if (phone !== undefined) result.phone = phone;
+    if (state !== undefined) result.state = state;
+    if (recommendation !== undefined) result.recommendation = recommendation;
+
+    await result.save();
+    return res.json(result);
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: 'Failed to update quiz result' });
+  }
+});
+
 // Create a quiz result
 router.post('/', async (req: Request, res: Response) => {
   try {

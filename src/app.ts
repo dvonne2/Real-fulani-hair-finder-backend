@@ -3,6 +3,8 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import healthRouter from './routes/health';
 import quizResultsRouter from './routes/quizResults';
+import adminRouter from './routes/admin';
+import apiRouter from './routes/api';
 
 dotenv.config();
 
@@ -18,5 +20,7 @@ app.use(
 
 app.use('/health', healthRouter);
 app.use('/quiz-results', quizResultsRouter);
+app.use('/admin', adminRouter);
+app.use('/api', apiRouter);
 
 export default app;
