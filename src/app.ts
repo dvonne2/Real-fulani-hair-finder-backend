@@ -9,28 +9,24 @@ dotenv.config();
 const app = express();
 
 app.use(express.json());
-// app.use(
-//   cors({
-//     origin: process.env.CORS_ORIGIN?.split(',').map((s) => s.trim()) || '*',
-//     credentials: true,
-//   })
-// );
 
-app.use(cors())
-app.disable("x-powered-by");
-console.log(process.env.CORS_ORIGIN, [
-  'http://localhost:3000',
-  'http://localhost:3001',
-])
+const allowedOrigins = process.env.CORS_ORIGIN
+  ? process.env.CORS_ORIGIN.split(",").map(o => o.trim())
+  : ["*"];
 
-
-app.use( 
-  cors({ 
-    origin: process.env.CORS_ORIGIN,  
-
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        console.error("❌ Blocked by CORS:", origin);
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
     credentials: true,
-  }),
-)
+  })
+);
 
 app.use('/health', healthRouter);
 app.use('/quiz-results', quizResultsRouter);
