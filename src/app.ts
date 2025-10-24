@@ -28,6 +28,9 @@ app.use(
   })
 );
 
+app.get('/', (req, res) => {
+  res.send('Welcome to the Real Fulani Hair Finder API!');
+});
 app.use('/health', healthRouter);
 app.use('/quiz-results', quizResultsRouter);
 
